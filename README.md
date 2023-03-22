@@ -79,6 +79,12 @@ You can send a query to the API to retrieve a response in a JSON format. To do s
 curl -X POST http://localhost:5000/query -H "Content-Type: application/json" -d [add data here]
 ```
 
+This query returns the following payload:
+
+```
+[add payload]
+```
+
 ## Contributors
 
 - capjamesg
