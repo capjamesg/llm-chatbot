@@ -1,4 +1,4 @@
-## AI Documentation Chatbot (Powered by ChatGPT 3.5)
+# AI Documentation Chatbot (Powered by ChatGPT 3.5)
 
 The source code for James Bot, a bot that makes reference to a corpus of documents to answer questions.
 
