@@ -18,6 +18,8 @@ This AI documentation bot has three components:
 
 ## Getting Started
 
+### Install Dependencies
+
 To get started with this project, first set up a virtual environment and install the required dependencies:
 
 ```
@@ -26,11 +28,15 @@ source venv/bin/activate
 pip3 install -r requirements.txt
 ```
 
+### Export OpenAI Key
+
 You will need an OpenAI API key to use this project. Create an OpenAI account, then retrieve your API key. Export the key into an environment variable like this:
 
 ```
 export OPENAI_KEY = "YOUR_KEY"
 ```
+
+### Ingest Content
 
 Next, you will need to ingest content to create a reference index and data store. Open `example_ingest.py` and modify the code to retrieve information from the format in which your data is stored. In the example file, information is read from a folder of markdown files and compiled into an index.
 
@@ -43,17 +49,50 @@ The reference index can contain any aribitrary JSON, but recommended values are:
 
 These values can be used at query time to provide more information to your prompt.
 
+### Set Up a Prompt
+
 Next, you need to configure a prompt.
 
 To do so, open the `generate_prompt.py` file and replace the example text with the prompt that you want to use in the web application. By using this file, you can generate different versions of a prompt for use in your application. This makes it easy for you to track changes to your prompts over time and revert back to previous versions if required.
 
 You should specify a `System` prompt and the start of the `Assistant` prompt, to which the text a user submits as a query in the web interface will be appended.
 
-Once you have written your ingestion logic, run this command:
+### Configure Application Database
+
+Finally, you need to set up a database for this application. The required database schema is stored in the `schema.sql` file. Run this command to create the database from the schema:
+
+```
+psql -f schema.sql
+```
+
+Now, run the following commands so the application knows how to access your database:
+
+```
+export DB_HOST="localhost"
+export DB_NAME="name"
+export DB_USER="user"
+export DB_PASS="password"
+```
+
+You can then run the ingestion script to create the reference index and vector store:
 
 ```
 python3 example_ingest.py
 ```
+
+### Configure IndieAuth Authentication
+
+This application uses IndieAuth to support the administration panel. To authenticate as an admin, you must set up IndieAuth on your website.
+
+When you have set up IndieAuth, you can set the following environment variables to enable the admin panel:
+
+```
+export CALLBACK_URL="https://example.com/callback"
+export CLIENT_ID="https://example.com"
+export ME = "https://yoursite.com" # the URL of your personal website with which you will authenticate.
+```
+
+### Run the Web Application
 
 Next, you can run the web application:
 
@@ -62,6 +101,19 @@ python3 web.py
 ```
 
 The chatbot will be available at `http://localhost:5000`.
+
+## Schemas and Indices
+
+The `ingest.py` script stores indices in the `indices/` directory. For each new index, a new directory is created with the number corresponding with the index.
+
+The most recent index is stored in `indices/current.json`.
+
+Each numbered folder will contain two types of files:
+
+1. A JSON file with the structured information you have ingested.
+2. The vector store, which contains the embeddings for each item in the index. This is stored in a `.bin` file.
+
+If you have created multiple indices for a single version, they will all appear in the numbered folder associated with that version.
 
 ## Application Routes
 
