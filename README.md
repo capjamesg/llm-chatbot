@@ -65,11 +65,14 @@ The chatbot will be available at `http://localhost:5000`.
 
 ## Application Routes
 
-The web application has a few routes:
+The web application has a few user-facing routes:
 
 - `/`: Send a query to the API.
 - `/adminpage`: View all prompts added to the system.
 - `/login`: Authenticate with [IndieAuth](https://indieweb.org/IndieAuth).
+- `/session`: See all the prompts that you have created, stored in `localStorage`.
+- `/logout`: Log out of the application.
+- `/prompt/<id>`: View a specific prompt.
 
 ## API
 
