@@ -76,14 +76,37 @@ The web application has a few routes:
 You can send a query to the API to retrieve a response in a JSON format. To do so, use the following query structure:
 
 ```
-curl -X POST http://localhost:5000/query -H "Content-Type: application/json" -d [add data here]
+curl -X POST -d "query=What books do you like?" http://localhost:5000/query
 ```
 
-This query returns the following payload:
+This query returns a payload in this form:
 
 ```
-[add payload]
+{
+   "id": "prompt",
+   "knn": [
+      "Books!!!","## Reading Books",
+      "I do not read books very often but I do enjoy reading. While I have read more books on coffee than anything else, I am very fond of fiction, particularly Japanese fiction. I like getting to know the characters and seeing them change throughout a book.",
+      ...
+   ],
+   "references": {
+      "inline":[],
+      "sources":[
+         {"title":"https://chat.indieweb.org/{\"type\":\"m","url":"https://chat.indieweb.org/{\"type\":\"m"},
+         {"title":"How I Learn About Speciality Coffee","url":"https://jamesg.blog/2020/10/25-how-i-learn-about-speciality-coffee/"},
+         ...
+      ]
+   },
+   "response": "Answer: I do not read books very often but I do enjoy reading. While I have read more books on coffee than anything else, I am very fond of fiction, particularly Japanese fiction.\n\nEvaluation: This is my answer based on my personal preference when it comes to books.\n\nTruth: N/A Since this is a personal preference and not a factual statement, it cannot be evaluated as true or false based on the sources provided."
+}
 ```
+
+Where:
+
+- `id`: The unique ID associated with the answer.
+- `knn`: The nearest neighbours of the query in the vector store, used as Sources (if configured).
+- `references`: The references associated with the answer.
+- `response`: The response from the OpenAI API.
 
 ## Contributors
 
