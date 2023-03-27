@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+    {% include 'head.html' %}
+    <body>
+        {% include 'nav.html' %}
+        <main>
+            <h1>James Bot: Prompt Session 🤖</h1>
+            <h2>Your Prompts</h2>
+            <button id="clear-session">Clear Session</button>
+            <ul id="prompts"></ul>
+            <p class="disclaimer">This text was written by a generative text language model, trained on James' blog. Factual inaccuracies may be present.</p>
+            <h2>About This Project</h2>
+            <p>James Bot is an AI chatbot trained on James' public IRC messages and blog. You can ask the Bot questions below.</p>
+            <p>Please note the Bot generates text and may be prone to hallucination (generating text that is factually inaccurate).</p>
+            <footer>
+                <p>James Bot is made with ❤️, 🧇 and ☕️ by <a href="https://jamesg.blog">capjamesg</a>. </p>
+            </footer>
+        </main>
+        <script>
+            // Get the prompts from localStorage
+            const prompts = JSON.parse(localStorage.getItem('prompts')) || [];
+
+            // Create a list of prompts
+            const promptsList = document.getElementById('prompts');
+
+            prompts.forEach(prompt => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                <h3>${prompt.question}</h3>
+                <pre>${prompt.answer}</pre>
+                <a href="https://jamesg.blog/prompt/${prompt.id}">Share Link</a>
+                `;
+                promptsList.appendChild(li);
+            });
+
+            // If there are no prompts, show a message
+            if (prompts.length === 0) {
+                const li = document.createElement('li');
+                li.innerHTML = 'There are no prompts in your session. Ask the Bot a question!';
+                promptsList.appendChild(li);
+            }
+
+            // Clear the session
+            const clearSession = document.getElementById('clear-session');
+
+            clearSession.addEventListener('click', () => {
+                localStorage.removeItem('prompts');
+                window.location.reload();
+            });
+        </script>
+    </body>
+</html>

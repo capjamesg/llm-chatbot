@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+    {% include 'head.html' %}
+    <body>
+        {% include 'nav.html' %}
+        <main>
+            <h1>James Bot Admin 🤖</h1>
+            <h2>Current State</h2>
+            <details>
+                <summary>Show Information</summary>
+                <ul>
+                    <p>Authenticated as {{ username }}</p>
+                    <p>Index Number: {{ index_number }}</p>
+                    <p>Queried Index: {{ queried_index }}</p>
+                    <p>Current Prompt ID: {{ prompt_id }}</p>
+                </ul>
+                <pre>
+                    {{ current_prompt }}
+                </pre>
+            </details>
+            <h2>Prompts</h2>
+            <ul>
+                {% for prompt in prompts %}
+                    <li {% if prompt[5] == 0 %}style="opacity: 0.5;"{% endif %}>
+                        {% if prompt[5] == 0 %}<p style="font-size: 0.8em;">Downvoted</p>{% endif %}
+                        <h3>{{ prompt[1] }}</h3>
+                        <pre>{{ prompt[0] | safe }}</pre>
+                        {% if prompt[4] %}
+                            <p>Generated on {{ prompt[4] }}</p>
+                        {% endif %}
+                        <p style="font-size: 0.8em;">(prompt ID {{ prompt[3] }})</p>
+                        {% if prompt[5] %}
+                            <p>Question asked by <a href="{{ prompt[5] }}">{{ prompt[5].replace("https://", "").replace("http://", "").strip("/") }}</a>.</p>
+                        {% endif %}
+                        <p><a href="/prompt/{{ prompt[2] }}">View Prompt</a></p>
+                    </li>
+                {% endfor %}
+            </ul>
+            {% for i in range(1, num_pages + 1) %}
+                <a href="/adminpage?page={{ i }}">{{ i }}</a>
+            {% endfor %}
+            <style>
+                main li {
+                    margin-bottom: 2em;
+                    border-bottom: 1px solid #ccc;
+                }
+            </style>
+            <button><a href="/">Try It Yourself</a></button>
+            <h2>About This Project</h2>
+            <p>James Bot is an AI chatbot trained on James' public IRC messages and blog. You can ask the Bot questions below.</p>
+            <p>Please note the Bot generates text and may be prone to hallucination (generating text that is factually inaccurate).</p>
+            <footer>
+                <p>James Bot is made with ❤️, 🧇 and ☕️ by <a href="https://jamesg.blog">capjamesg</a>. </p>
+            </footer>
+        </main>
+    </body>
+</html>

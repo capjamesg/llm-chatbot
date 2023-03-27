@@ -1,0 +1,137 @@
+<head>
+    <title>James Bot</title>
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#EEBAB2" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+
+    <link rel="manifest" href="/static/manifest.json" />
+
+    <link rel="apple-touch-icon" href="https://jamesg.blog/assets/coffeeshop.jpeg" />
+    <link rel="apple-touch-icon" sizes="152x152" href="https://jamesg.blog/assets/coffeeshop.jpeg" />
+    <link rel="apple-touch-icon" sizes="512x512" href="https://jamesg.blog/assets/coffeeshop.jpeg" />
+
+    <link rel="icon" href="https://jamesg.blog/favicon.ico" type="image/x-icon" />
+    
+    <meta name="description" content="James Bot is trained on James' public IRC messages and blog. Ask him questions." />
+    {% if slug %}
+        <meta property="og:image" content="https://screenshots.jamesg.blog/?url=https://jamesg.blog/bot/{{ slug }}">
+    {% else %}
+        <meta property="og:image" content="https://screenshots.jamesg.blog/?url=https://jamesg.blog/bot/">
+    {% endif %}
+
+    <style>
+        html, body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        * {
+            box-sizing: border-box;
+        }
+        p {
+            line-height: 1.5em;
+        }
+        nav {
+            background-color: #EEBAB2;
+            color: black;
+            padding: 1em;
+            display: flex;
+            justify-content: space-between;
+        }
+        nav p {
+            margin: 0;
+        }
+        nav ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        nav li {
+            display: inline-block;
+            margin-left: 1em;
+            margin-top: 4px;
+        }
+        nav a {
+            color: black;
+            text-decoration: none;
+        }
+        nav a:hover {
+            text-decoration: underline;
+        }
+        main {
+            max-width: 35em;
+            margin: auto;
+            padding: 20px;
+        }
+        input, textarea {
+            padding: 0.5em;
+            border: 1px solid #ccc;
+            border-radius: 0.25em;
+            font-size: 1em;
+            width: 100%;
+        }
+        textarea {
+            resize: none;
+        }
+        input[type="submit"], button {
+            background-color: #EEBAB2;
+            color: black;
+            border: none;
+            cursor: pointer;
+            padding: 1em;
+            border-radius: 0.25em;
+            width: 100%;
+            margin: 1em 0;
+            font-size: 16px;
+        }
+        a {
+            color: royalblue;
+            text-decoration: none;
+        }
+        button a {
+            text-decoration: none;
+            color: black;
+        }
+        pre {
+            background-color: #eee;
+            padding: 1em;
+            border-radius: 0.25em;
+            margin: 1em 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        footer {
+            text-align: center;
+            padding: 1em;
+        }
+        #concise-question-wrapper {
+            background-color: #B497EF;
+            padding: 5px;
+            border-radius: 0.25em;
+        }
+        .disclaimer {
+            font-size: 0.6em;
+            font-style: italic;
+        }
+        ul {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        .toast {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #EEBAB2;
+            color: black;
+            padding: 1em;
+            text-align: center;
+        }
+        #ideas li {
+            margin-top: 1em;
+        }
+    </style>
+</head>

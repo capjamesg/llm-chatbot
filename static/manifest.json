@@ -1,0 +1,19 @@
+{
+    "short_name": "James Bot",
+    "name": "James Bot",
+    "icons": [
+        {
+        "src": "https://jamesg.blog/assets/coffeeshop.jpeg",
+        "type": "image/jpeg",
+        "sizes": "512x512 120x120 152x152 167x167 180x180 192x192 384x384",
+        "purpose": "any maskable"
+        }
+    ],
+    "id": "/?source=pwa",
+    "start_url": "/?source=pwa",
+    "background_color": "#fff",
+    "display": "standalone",
+    "scope": "/",
+    "theme_color": "#EEBAB2",
+    "description": "Ask James Bot a question. Trained on James' public IRC messages and blog posts on jamesg.blog"
+}
