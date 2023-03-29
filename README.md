@@ -15,6 +15,10 @@ This AI documentation bot has three components:
    2. The vector index and reference index are queried to return information about the entry;
    3. A prompt is generated to send to ChatGPT and;
    4. The response from the OpenAI API is returned to the client.
+   
+### Disclaimer
+   
+This application sends data from the sources you provide to OpenAI in a prompt for use in answering questions. You should independently research the data policies of OpenAI to understand how your data may be used.
 
 ## Getting Started
 
