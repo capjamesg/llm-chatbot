@@ -3,8 +3,9 @@ import os
 from copy import deepcopy
 
 import openai
+import config
 
-openai.api_key = os.environ["OPENAI_KEY"]
+openai.api_key = config.OPENAI_KEY
 
 # if prompts.json not present, raise error
 if not os.path.exists(f"prompts.json"):

@@ -51,7 +51,7 @@ def save_index_and_schema(vector_index, schema, stage):
         json.dump(schema, f)
 
 
-def get_embedding(vector_index: faiss.FlatIndex, document: str, schema=[]):
+def get_embedding(vector_index, document: str, schema=[]):
     # embed post
     try:
         response = openai.Embedding.create(

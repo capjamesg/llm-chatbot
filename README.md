@@ -32,68 +32,98 @@ source venv/bin/activate
 pip3 install -r requirements.txt
 ```
 
-### Export OpenAI Key
+### Configure Database
 
-You will need an OpenAI API key to use this project. Create an OpenAI account, then retrieve your API key. Export the key into an environment variable like this:
-
-```
-export OPENAI_KEY = "YOUR_KEY"
-```
-
-### Ingest Content
-
-Next, you will need to ingest content to create a reference index and data store. Open `example_ingest.py` and modify the code to retrieve information from the format in which your data is stored. In the example file, information is read from a folder of markdown files and compiled into an index.
-
-The reference index can contain any aribitrary JSON, but recommended values are:
-
-- `title`: The title of the document.
-- `date`: The date on which the content was published.
-- `content`: The content in the document.
-- `url`: The URL where content can be found.
-
-These values can be used at query time to provide more information to your prompt.
-
-### Set Up a Prompt
-
-Next, you need to configure a prompt.
-
-To do so, open the `generate_prompt.py` file and replace the example text with the prompt that you want to use in the web application. By using this file, you can generate different versions of a prompt for use in your application. This makes it easy for you to track changes to your prompts over time and revert back to previous versions if required.
-
-You should specify a `System` prompt and the start of the `Assistant` prompt, to which the text a user submits as a query in the web interface will be appended.
-
-### Configure Application Database
-
-Finally, you need to set up a database for this application. The required database schema is stored in the `schema.sql` file. Run this command to create the database from the schema:
+Next, we need to set up a PostgreSQL database. The required database schema is stored in the `schema.sql` file. Run this command to create the database from the schema:
 
 ```
 psql -f schema.sql
 ```
 
-Now, run the following commands so the application knows how to access your database:
+Now, open the `config.py` file and set the database connection details:
 
 ```
-export DB_HOST="localhost"
-export DB_NAME="name"
-export DB_USER="user"
-export DB_PASS="password"
+DB_HOST="localhost"
+DB_NAME="name"
+DB_USER="user"
+DB_PASS="password"
 ```
 
-You can then run the ingestion script to create the reference index and vector store:
+### Configure OpenAI API Access
+
+You will need an OpenAI API key to use this project. Create an OpenAI account, then retrieve your API key. Save the key into your `config.py` file:
 
 ```
-python3 example_ingest.py
+OPENAI_KEY=""
 ```
 
 ### Configure IndieAuth Authentication
 
 This application uses IndieAuth to support the administration panel. To authenticate as an admin, you must set up IndieAuth on your website.
 
-When you have set up IndieAuth, you can set the following environment variables to enable the admin panel:
+When you have set up IndieAuth, you can set the following variables in the `config.py` file:
 
 ```
-export CALLBACK_URL="https://example.com/callback"
-export CLIENT_ID="https://example.com"
-export ME = "https://yoursite.com" # the URL of your personal website with which you will authenticate.
+CALLBACK_URL="https://example.com/callback"
+CLIENT_ID="https://example.com"
+ME="https://yoursite.com" # the URL of your personal website with which you will authenticate.
+```
+
+### Ingest Content
+
+Next, create a folder called `pending_indexing`. In that folder, store any JSON documents that you want to ingest into the reference index. The JSON documents should contain, at minimum a `text` field with the text of the document. The JSON documents may be blog posts, podcast transcripts, chat logs, or any other type of text document.
+
+Next, you will need to ingest content to create a reference index and data store based on the JSON documents you have stored in the `pending_indexing` folder.
+
+To create the index, run this command:
+
+```
+python3 ingest.py
+```
+
+This will create a reference index and vector store in the `indices/` directory. The reference index is a JSON file that maps the ID of each item in the vector store to the text of the document. The vector store is a binary file that contains the embeddings for each item in the index.
+
+### Set Up a Prompt
+
+Next, you need to configure a prompt. This is the template that will be used to create a prompt that is sent to the OpenAI API.
+
+To do so, open the `generate_prompt.py` file and replace the example text with the prompt that you want to use in the web application. By using this file, you can generate different versions of a prompt for use in your application. This makes it easy for you to track changes to your prompts over time and revert back to previous versions if required.
+
+An example prompt is:
+
+```
+You are James. Answer using "I". Answer the question '[[[QUERY]]]?'.
+
+If you use text in a section to make a statement, you must cite the source in a HTML <a> tag. The text in the Sources section is formatted with a URL and a passage. You can only cite sources that are in the Sources section. The anchor text must be the title of source. You must never generate the anchor text.
+
+Use the Sources text below, as well as your facts above, to answer. Sources have dates at the end. You should prefer more recent information. And add a caveat such as "this may be out of date since my Source was published on [date]", where [date] is the date on which the source was published. if you are citing information older than one year from [[[CURRENT_DATE]]]
+
+[STOP] means end of sources.\n
+
+Sources
+-------
+
+[[[SOURCES]]]
+
+[STOP]
+```
+
+In this prompt, values in `[[[]]]` are substitutions. These substitutions are replaced with values from the JSON documents at query time.
+
+By default:
+
+- `[[[QUERY]]]` is replaced with the text a user submits as a query in the web interface.
+- `[[[SOURCE]]]` is replaced with the text of the document that is returned from the vector store.
+- `[[[CURRENT_DATE]]]` is replaced with the current date.
+
+To configure other substitutions, modify the logic in the `web.py` file where the `prompt_data.execute()` call is made.
+
+You should specify a `System` prompt that contains high-level rules in the `generateprompt.py` file. Then, add an `Assistant` prompt. The `Assistant` prompt should contain specific instructions for the assistant to follow, and is where the user query and sources information will be added.
+
+You can then generate a prompt version using this line of code:
+
+```
+python3 generateprompt.py
 ```
 
 ### Run the Web Application
