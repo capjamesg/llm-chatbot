@@ -24,12 +24,13 @@ This application sends data from the sources you provide to OpenAI in a prompt f
 
 ### Install Dependencies
 
-To get started with this project, first set up a virtual environment and install the required dependencies:
+To get started with this project, first set up a virtual environment, install the required dependencies, and create a config file:
 
 ```
 python3 -m venv venv
 source venv/bin/activate
 pip3 install -r requirements.txt
+cp example_config.py config.py
 ```
 
 ### Configure Database
