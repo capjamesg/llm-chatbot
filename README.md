@@ -184,6 +184,8 @@ To save a document for later indexing, make the following request:
 curl -X POST -d '{"title":"My Title","content":"My Content","date":"2023-01-01","url":"https://example.com"}' http://localhost:5000/index
 ```
 
+A 200 response indicates that the document was successfully saved.
+
 The JSON payload can be any arbitrary JSON, but there MUST be a value called `text` present. `text` must contain the main content in the document. This is the content for which an embedding will be calculated.
 
 The following keys are recommended, in addition to `text`:

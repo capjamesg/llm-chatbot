@@ -1,11 +1,14 @@
 import json
 import os
-import re
 from copy import deepcopy
 
 import openai
 
 openai.api_key = os.environ["OPENAI_KEY"]
+
+# if prompts.json not present, raise error
+if not os.path.exists(f"prompts.json"):
+    raise Exception("prompts.json not found. You must generate a prompt with `python3 generateprompt.py` before running the web app.")
 
 with open("prompts.json", "r") as f:
     prompts = json.load(f)

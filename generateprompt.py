@@ -14,8 +14,8 @@ with open("prompts.json", "r") as f:
     prompt_data = json.load(f)
 
 # MUST FILL OUT
-INDEX_ID = 16
-INDEX_NAME = "index"
+INDEX_ID = 24
+INDEX_NAME = "blog_posts"
 
 prompt_to_add = {
     "id": uuid.uuid4().hex,

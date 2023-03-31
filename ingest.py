@@ -30,9 +30,18 @@ if not os.path.exists("indices/" + str(current_index)):
     os.makedirs("indices/" + str(current_index))
 
 # read all files in logs
+# if "--new" is an argument, use fresh index
 
-vector_index = faiss.IndexFlatL2(1536)
+if current_index == 1 or "--new" in sys.argv:
+    vector_index = faiss.IndexFlatL2(1536)
+    schema = []
+else:
+    # open most recent index, which should have the name "main.bin"
+    with open("indices/" + str(current_index - 1) + "/main_vector_index.bin", "rb") as f:
+        vector_index = faiss.read_index(f)
 
+    with open("indices/" + str(current_index - 1) + "/main_schema.json", "r") as f:
+        schema = json.load(f)
 
 def save_index_and_schema(vector_index, schema, stage):
     print("Saving index and schema for stage " + stage)
@@ -274,7 +283,7 @@ def index_pending(vector_index, schema=[]):
 
 
 vector_index, schema = index_pending(vector_index)
-save_index_and_schema(vector_index, schema)
+save_index_and_schema(vector_index, schema, "main")
 
 # vector_index, schema = get_source_code_docs(vector_index)
 # save_index_and_schema(vector_index, schema)
