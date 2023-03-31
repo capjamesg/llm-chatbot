@@ -17,14 +17,15 @@ from flask import Flask, flash, jsonify, redirect, render_template, request, ses
 from indieweb_utils import Paginator, discover_endpoints, indieauth_callback_handler
 
 from PromptManager import Prompt
+import config
 
-openai.api_key = os.environ["OPENAI_KEY"]
+openai.api_key = config.OPENAI_KEY
 
 conn = psycopg2.connect(
-    host=os.environ["DB_HOST"],
-    database=os.environ["DB_NAME"],
-    user=os.environ["DB_USER"],
-    password=os.environ["DB_PASS"],
+    host=config.DB_HOST,
+    database=config.DB_NAME,
+    user=config.DB_USER,
+    password=config.DB_PASS,
 )
 
 prompt_data = Prompt()
@@ -33,9 +34,10 @@ index_number = prompt_data.index_id
 queried_index = prompt_data.index_name
 prompt_id = prompt_data.prompt_id
 
-ME = os.environ["ME"]
-CALLBACK_URL = ""
-CLIENT_ID = ""
+ME = config.ME
+CALLBACK_URL = config.CALLBACK_URL
+CLIENT_ID = config.CLIENT_ID
+API_KEY = config.API_KEY
 
 vector_index = faiss.read_index(
     f"indices/{index_number}/{queried_index}_vector_index.bin"
@@ -48,6 +50,10 @@ app.secret_key = random.choice(string.ascii_letters) + "".join(
 
 with open(f"indices/{index_number}/{queried_index}_schema.json", "r") as f:
     schema = json.load(f)
+
+# create pending_indexing dir if it doesn't exist
+if not os.path.exists("pending_indexing"):
+    os.mkdir("pending_indexing")
 
 
 def prompt_is_safe(prompt: str) -> bool:
@@ -88,6 +94,21 @@ def prompt(prompt_id):
 @app.route("/session", methods=["GET"])
 def user_session():
     return render_template("session.html")
+
+
+@app.route("/index", methods=["POST"])
+def index_content():
+    # get key from header
+    key = request.headers.get("Authorization", "").replace("Bearer ", "")
+
+    if key != API_KEY:
+        return jsonify({"status": "error", "message": "Invalid API key."}), 401
+
+    # accepted input: any aritrary JSON object
+    with open(f"pending_indexing/{uuid.uuid4().hex}.json", "w") as f:
+        json.dump(request.json, f)
+
+    return jsonify({"status": "success"})
 
 
 @app.route("/adminpage", methods=["GET"])
@@ -140,8 +161,6 @@ def defend():
         prompt = cur.fetchone()
 
     query = prompt[0]
-
-    print(prompt)
 
     # get Sources from prompt
     prompt_text = prompt[0]
@@ -248,16 +267,11 @@ def query():
     facts_and_sources = []
 
     for fact in facts:
-        facts_and_sources.append(fact + " (Source: https://jamesg.blog/about/)")
+        facts_and_sources.append(fact + " (Source: " + config.FACT_SOURCE + ")")
 
     skipped = []
 
     for i in range(len(knn)):
-        # if there is html in the response, skip it
-        # if "{" in content_sources[i]:
-        #     skipped.append(i)
-        #     continue
-
         facts_and_sources.append(
             knn[i]
             + ' (Source: <a href="'
@@ -268,7 +282,6 @@ def query():
             + dates[i]
             + ")"
         )
-    print(facts_and_sources)
 
     facts_and_sources_text = "\n\n".join(facts_and_sources)
     # cut off at 2000 words
@@ -336,7 +349,7 @@ def indieauth_callback():
             token_endpoint=session.get("token_endpoint"),
             code_verifier=session["code_verifier"],
             session_state=session.get("state"),
-            me="https://jamesg.blog",
+            me=ME,
             callback_url=CALLBACK_URL,
             client_id=CLIENT_ID,
             required_scopes=required_scopes,

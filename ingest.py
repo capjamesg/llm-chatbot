@@ -42,6 +42,24 @@ def save_index_and_schema(vector_index, schema, stage):
         json.dump(schema, f)
 
 
+def get_embedding(vector_index: faiss.FlatIndex, document: str, schema=[]):
+    # embed post
+    try:
+        response = openai.Embedding.create(
+            input=document["text"], model="text-embedding-ada-002"
+        )
+    except:
+        print("Rate limited...")
+        time.sleep(0.1)
+
+    embeddings = response["data"][0]["embedding"]
+    vector_index.add(np.array([embeddings]).reshape(1, 1536))
+
+    schema.append(document)
+
+    return vector_index, schema
+
+
 def get_source_code_docs(vector_index, schema=[]):
     source_code_docs = []
     source_code_doc_urls = []
@@ -59,29 +77,14 @@ def get_source_code_docs(vector_index, schema=[]):
     counter = 0
 
     for doc in source_code_docs:
-        # embed post
-        try:
-            response = openai.Embedding.create(
-                input=doc, model="text-embedding-ada-002"
-            )
-        except:
-            print("Rate limited...")
-            time.sleep(0.1)
-            counter += 1
-            continue
+        doc = {
+            "source": "source_code_docs",
+            "text": doc,
+            "title": file.replace(".md", ""),
+            "url": source_code_doc_urls[source_code_docs.index(doc)],
+        }
 
-        embeddings = response["data"][0]["embedding"]
-        vector_index.add(np.array([embeddings]).reshape(1, 1536))
-
-        schema.append(
-            {
-                "source": "source_code_docs",
-                "text": doc,
-                "embedding": np.array([embeddings]).reshape(1, 1536).tolist(),
-                "title": file.replace(".md", ""),
-                "url": source_code_doc_urls[source_code_docs.index(doc)],
-            }
-        )
+        get_embedding(vector_index, doc, schema)
         sys.stdout.flush()
         sys.stdout.write(f"\r{counter + 1} / {len(source_code_docs)}")
         sys.stdout.flush()
@@ -248,9 +251,34 @@ def get_facts(vector_index, schema=[]):
     return vector_index, schema
 
 
-vector_index, schema = get_source_code_docs(vector_index)
+def index_pending(vector_index, schema=[]):
+    # index all items in pending_indexing/*.json
+    # if not exists, return
+    if not os.path.exists("pending_indexing"):
+        return vector_index, schema
+    
+    if not os.path.exists("indexed_docs"):
+        os.mkdir("indexed_docs")
+
+    for file in os.listdir("pending_indexing"):
+        if file.endswith(".json"):
+            with open("pending_indexing/" + file, "r") as f:
+                data = json.load(f)
+
+            for item in data:
+                vector_index, schema = get_embedding(vector_index, item, schema)
+
+            os.rename("pending_indexing/" + file, "indexed_docs/" + file)
+
+    return vector_index, schema
+
+
+vector_index, schema = index_pending(vector_index)
 save_index_and_schema(vector_index, schema)
-vector_index, schema = get_breakfast_and_coffee_wiki_pages(vector_index, schema)
-save_index_and_schema(vector_index, schema)
-vector_index, schema = get_public_readmes(vector_index, schema)
-save_index_and_schema(vector_index, schema)
+
+# vector_index, schema = get_source_code_docs(vector_index)
+# save_index_and_schema(vector_index, schema)
+# vector_index, schema = get_breakfast_and_coffee_wiki_pages(vector_index, schema)
+# save_index_and_schema(vector_index, schema)
+# vector_index, schema = get_public_readmes(vector_index, schema)
+# save_index_and_schema(vector_index, schema)
