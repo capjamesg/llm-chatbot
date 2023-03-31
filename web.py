@@ -257,41 +257,48 @@ def query():
 
     facts = []
 
-    content_sources = [schema[i]["url"] for i in I[0]]
-    titles = [schema[i].get("title", schema[i]["url"]) for i in I[0]]
-    dates = [schema[i].get("date", "") for i in I[0]]
+    content_sources = [schema[i].get("url", None) for i in I[0] if schema[i].get("url")]
 
-    # create text that looks like this
-    # [fact] (Source: [source])
+    if len(content_sources) > 0:
+        titles = [schema[i].get("title", schema[i]["url"]) for i in I[0]]
+        dates = [schema[i].get("date", "") for i in I[0]]
 
-    facts_and_sources = []
+        # create text that looks like this
+        # [fact] (Source: [source])
 
-    for fact in facts:
-        facts_and_sources.append(fact + " (Source: " + config.FACT_SOURCE + ")")
+        facts_and_sources = []
 
-    skipped = []
+        for fact in facts:
+            facts_and_sources.append(fact + " (Source: " + config.FACT_SOURCE + ")")
 
-    for i in range(len(knn)):
-        facts_and_sources.append(
-            knn[i]
-            + ' (Source: <a href="'
-            + content_sources[i]
-            + '">'
-            + titles[i]
-            + "</a>, "
-            + dates[i]
-            + ")"
-        )
+        skipped = []
 
-    facts_and_sources_text = "\n\n".join(facts_and_sources)
-    # cut off at 2000 words
-    facts_and_sources_text = " ".join(facts_and_sources_text.split(" ")[:300])
+        for i in range(len(knn)):
+            facts_and_sources.append(
+                knn[i]
+                + ' (Source: <a href="'
+                + content_sources[i]
+                + '">'
+                + titles[i]
+                + "</a>, "
+                + dates[i]
+                + ")"
+            )
 
-    references = [
-        {"url": content_sources[i], "title": titles[i]}
-        for i in range(len(knn))
-        if i not in skipped
-    ]
+        facts_and_sources_text = "\n\n".join(facts_and_sources)
+        # cut off at 2000 words
+        facts_and_sources_text = " ".join(facts_and_sources_text.split(" ")[:300])
+
+        references = [
+            {"url": content_sources[i], "title": titles[i]}
+            for i in range(len(knn))
+            if i not in skipped
+        ]
+    else:
+        facts_and_sources_text = "\n\n".join([schema[i]["text"] for i in I[0]])
+        skipped = []
+
+        references = []
 
     response = prompt_data.execute(
         {

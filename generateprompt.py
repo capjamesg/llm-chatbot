@@ -13,9 +13,22 @@ if not os.path.exists("prompts.json"):
 with open("prompts.json", "r") as f:
     prompt_data = json.load(f)
 
+# get most current index from indices/current.json
+if not os.path.exists("indices/current.json"):
+    if not os.path.exists("indices"):
+        os.makedirs("indices")
+
+    with open("indices/current.json", "w") as f:
+        json.dump({"index": 0}, f)
+
+    current_index = 0
+else:
+    with open("indices/current.json", "r") as f:
+        current_index = json.load(f)["index"]
+
 # MUST FILL OUT
-INDEX_ID = 24
-INDEX_NAME = "blog_posts"
+INDEX_ID = current_index
+INDEX_NAME = "main"
 
 prompt_to_add = {
     "id": uuid.uuid4().hex,
@@ -29,23 +42,20 @@ prompt_to_add = {
         },
         {
             "role": "user",
-            "content": """Example user prompt.""",
-        },
-        {
-            "role": "assistant",
-            "content": """Example assistant response.""",
-        },
-        {
-            "role": "user",
-            "content": """Example user question.""",
-        },
-        {
-            "role": "assistant",
-            "content": """Example assistant response.""",
-        },
-        {
-            "role": "user",
-            "content": f"""Full user question.""",
+            "content": """You are Bot. Answer the question '[[[QUERY]]]?'.
+
+If you use text in a section to make a statement, you must cite the source in a HTML <a> tag. The text in the Sources section is formatted with a URL and a passage. You can only cite sources that are in the Sources section. The anchor text must be the title of source. You must never generate the anchor text.
+
+Use the Sources text below, as well as your facts above, to answer. Sources have dates at the end. You should prefer more recent information. And add a caveat such as "this may be out of date since my Source was published on [date]", where [date] is the date on which the source was published. if you are citing information older than one year from [[[CURRENT_DATE]]]
+
+[STOP] means end of sources.\n
+
+Sources
+-------
+
+[[[SOURCES]]]
+
+[STOP]""",
         },
     ],
 }

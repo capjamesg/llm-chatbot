@@ -57,9 +57,13 @@ def get_embedding(vector_index, document: str, schema=[]):
         response = openai.Embedding.create(
             input=document["text"], model="text-embedding-ada-002"
         )
-    except:
+    except Exception as e:
+        print(e)
         print("Rate limited...")
         time.sleep(0.1)
+        response = openai.Embedding.create(
+            input=document["text"], model="text-embedding-ada-002"
+        )
 
     embeddings = response["data"][0]["embedding"]
     vector_index.add(np.array([embeddings]).reshape(1, 1536))
@@ -274,8 +278,7 @@ def index_pending(vector_index, schema=[]):
             with open("pending_indexing/" + file, "r") as f:
                 data = json.load(f)
 
-            for item in data:
-                vector_index, schema = get_embedding(vector_index, item, schema)
+            vector_index, schema = get_embedding(vector_index, data, schema)
 
             os.rename("pending_indexing/" + file, "indexed_docs/" + file)
 
