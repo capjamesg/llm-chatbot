@@ -132,6 +132,8 @@ The web application has a few user-facing routes:
 
 ## API
 
+### Send a Query
+
 You can send a query to the API to retrieve a response in a JSON format. To do so, use the following query structure:
 
 ```
@@ -166,6 +168,31 @@ Where:
 - `knn`: The nearest neighbours of the query in the vector store, used as Sources (if configured).
 - `references`: The references associated with the answer.
 - `response`: The response from the OpenAI API.
+
+### Save Document for Indexing
+
+Indexing happens in two stages: 
+
+1. Save a document via the API or a custom ingestion script, then;
+2. Run the `ingest.py` script to create the vector store.
+
+To save a document for later indexing, make the following request:
+
+```
+// should be a json request
+
+curl -X POST -d '{"title":"My Title","content":"My Content","date":"2023-01-01","url":"https://example.com"}' http://localhost:5000/index
+```
+
+The JSON payload can be any arbitrary JSON, but there MUST be a value called `text` present. `text` must contain the main content in the document. This is the content for which an embedding will be calculated.
+
+The following keys are recommended, in addition to `text`:
+
+- `title`: The title of the document.
+- `date`: The date on which the content was published.
+- `url`: The URL where content can be found.
+
+Whenever you want to update the index, run the `ingest.py` script. Then, restart the web application. This restart is necessary because the vector database is held in RAM in the web application.
 
 ## Contributors
 
