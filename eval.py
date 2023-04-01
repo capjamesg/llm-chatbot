@@ -1,10 +1,12 @@
+import argparse
+import datetime
 import json
 import os
-from PromptManager import Prompt
-import datetime
-import faiss
-import argparse
 import uuid
+
+import faiss
+
+from PromptManager import Prompt
 
 parser = argparse.ArgumentParser()
 
@@ -38,7 +40,8 @@ vector_index = faiss.read_index(
 with open(f"indices/{index_number}/{queried_index}_schema.json", "r") as f:
     schema = json.load(f)
 
-class Evaluation():
+
+class Evaluation:
     def __init__(self):
         if not os.path.exists("evals"):
             evals = []
@@ -57,14 +60,19 @@ class Evaluation():
         self.eval_started_time = None
         self.eval_ended_time = None
         self.uuid = str(uuid.uuid4())
+        self.stats = {}
 
     def run_evals(self):
         self.eval_started_time = datetime.datetime.now()
         for count, eval in enumerate(self.evals):
-            print(f"Running eval \"{eval['question']}\" ({count + 1}/{len(self.evals)})")
+            print(
+                f"Running eval \"{eval['question']}\" ({count + 1}/{len(self.evals)})"
+            )
             facts = []
 
-            facts_and_sources_text, knn, references = prompt_data.get_facts_and_knn(eval["question"], vector_index, schema, facts)
+            facts_and_sources_text, knn, references = prompt_data.get_facts_and_knn(
+                eval["question"], vector_index, schema, facts
+            )
 
             current_date = datetime.datetime.now().strftime("%Y-%m-%d")
 
@@ -82,7 +90,8 @@ class Evaluation():
                     "QUERY": response,
                     "SOURCES": facts_and_sources_text,
                 },
-                prompt_text=EVALUATE_PROMPT
+                prompt_text=EVALUATE_PROMPT,
+                temperature=0.0,
             )
 
             eval_record = {
@@ -91,7 +100,7 @@ class Evaluation():
                 "references": references,
                 "question": eval["question"],
             }
-            
+
             if "CORRECT" in eval_response:
                 self.successful_evals.append(eval_record)
             elif "INCORRECT" in eval_response:
@@ -104,7 +113,7 @@ class Evaluation():
     def get_eval_stats(self):
         precision, recall, f1_score = self.calculate_f1_score()
 
-        return {
+        self.stats = {
             "successful_evals_count": len(self.successful_evals),
             "failed_evals_count": len(self.failed_evals),
             "unsure_evals_count": len(self.unsure_evals),
@@ -116,19 +125,35 @@ class Evaluation():
             "f1_score": f1_score,
             "eval_started_time": self.eval_started_time.strftime("%Y-%m-%d %H:%M:%S"),
             "eval_ended_time": self.eval_ended_time.strftime("%Y-%m-%d %H:%M:%S"),
-            "uuid": self.uuid
+            "uuid": self.uuid,
         }
+
+        return self.stats
     
+    def pretty_print_eval_stats(self):
+        stats = self.stats
+        print(f"Precision: {stats['precision']}")
+        print(f"Recall: {stats['recall']}")
+        print(f"F1 Score: {stats['f1_score']}")
+        print(f"Successful evals: {stats['successful_evals_count']}")
+        print(f"Failed evals: {stats['failed_evals_count']}")
+        print(f"Unsure evals: {stats['unsure_evals_count']}")
+        print(f"Eval started at: {stats['eval_started_time']}")
+
     def calculate_f1_score(self):
         if len(self.successful_evals) == 0:
             return 0, 0, 0
-        
-        precision = len(self.successful_evals) / (len(self.successful_evals) + len(self.failed_evals))
-        recall = len(self.successful_evals) / (len(self.successful_evals) + len(self.unsure_evals))
+
+        precision = len(self.successful_evals) / (
+            len(self.successful_evals) + len(self.failed_evals)
+        )
+        recall = len(self.successful_evals) / (
+            len(self.successful_evals) + len(self.unsure_evals)
+        )
         f1_score = 2 * (precision * recall) / (precision + recall)
 
         return precision, recall, f1_score
-    
+
     def save_evals(self):
         if not os.path.exists("evals.json"):
             with open("evals.json", "w") as f:
@@ -143,7 +168,7 @@ class Evaluation():
             "eval_uuid": self.uuid,
             "index_name": queried_index,
             "generated_on": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "stats": self.get_eval_stats()
+            "stats": self.get_eval_stats(),
         }
 
         all_evals.append(eval_report)
@@ -155,17 +180,14 @@ class Evaluation():
         if not os.path.exists("evals"):
             os.mkdir("evals")
 
-        eval = {
-            "question": question,
-            "answer": answer
-        }
+        eval = {"question": question, "answer": answer}
 
         to_write = [eval]
 
         if os.path.exists(f"evals/{eval_name}.json"):
             with open(f"evals/{eval_name}.json", "r") as f:
                 evals = json.load(f)
-            
+
             evals.append(eval)
             to_write = evals
 
@@ -175,11 +197,12 @@ class Evaluation():
     def create_eval_interactive(self, eval_name=None):
         question = input("Question: ")
         answer = input("Answer: ")
-        
+
         if eval_name is None:
             eval_name = input("Eval name: ")
 
         self.create_eval(question, answer, eval_name)
+
 
 if __name__ == "__main__":
     eval = Evaluation()
@@ -187,6 +210,8 @@ if __name__ == "__main__":
     if parser.parse_args().create:
         while True:
             eval.create_eval_interactive("coffee")
-    elif parser.parse_args().eval:
+    
+    if parser.parse_args().eval:
         eval.run_evals()
+        eval.pretty_print_eval_stats()
         eval.save_evals()

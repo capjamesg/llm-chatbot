@@ -37,11 +37,14 @@ if current_index == 1 or "--new" in sys.argv:
     schema = []
 else:
     # open most recent index, which should have the name "main.bin"
-    with open("indices/" + str(current_index - 1) + "/main_vector_index.bin", "rb") as f:
+    with open(
+        "indices/" + str(current_index - 1) + "/main_vector_index.bin", "rb"
+    ) as f:
         vector_index = faiss.read_index(f)
 
     with open("indices/" + str(current_index - 1) + "/main_schema.json", "r") as f:
         schema = json.load(f)
+
 
 def save_index_and_schema(vector_index, schema, stage):
     print("Saving index and schema for stage " + stage)
@@ -269,7 +272,7 @@ def index_pending(vector_index, schema=[]):
     # if not exists, return
     if not os.path.exists("pending_indexing"):
         return vector_index, schema
-    
+
     if not os.path.exists("indexed_docs"):
         os.mkdir("indexed_docs")
 

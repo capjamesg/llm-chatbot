@@ -13,11 +13,13 @@ import faiss
 import numpy as np
 import openai
 import psycopg2
-from flask import Flask, flash, jsonify, redirect, render_template, request, session
-from indieweb_utils import Paginator, discover_endpoints, indieauth_callback_handler
+from flask import (Flask, flash, jsonify, redirect, render_template, request,
+                   session)
+from indieweb_utils import (Paginator, discover_endpoints,
+                            indieauth_callback_handler)
 
-from PromptManager import Prompt
 import config
+from PromptManager import Prompt
 
 openai.api_key = config.OPENAI_KEY
 
@@ -62,6 +64,7 @@ if not os.path.exists("evals.json"):
 with open("evals.json", "r") as f:
     all_evals = json.load(f)
 
+
 def prompt_is_safe(prompt: str) -> bool:
     response = openai.Moderation.create(input=prompt)
 
@@ -84,12 +87,14 @@ def index():
         "index.html", prompt=prompt_value, username=session.get("me")
     )
 
+
 @app.route("/eval")
 def eval_list():
     if not session.get("me") or session.get("me") != ME:
         return redirect("/")
-    
+
     return render_template("eval.html", username=session.get("me"), eval=all_evals[-1])
+
 
 @app.route("/prompt/<prompt_id>")
 def prompt(prompt_id):
@@ -252,7 +257,9 @@ def query():
 
     facts = []
 
-    facts_and_sources_text, knn, references = prompt_data.get_facts_and_knn(query, vector_index, schema, facts)
+    facts_and_sources_text, knn, references = prompt_data.get_facts_and_knn(
+        query, vector_index, schema, facts
+    )
 
     response = prompt_data.execute(
         {

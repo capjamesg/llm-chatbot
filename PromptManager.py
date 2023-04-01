@@ -1,16 +1,19 @@
 import json
 import os
 from copy import deepcopy
-import numpy as np
 
+import numpy as np
 import openai
+
 import config
 
 openai.api_key = config.OPENAI_KEY
 
 # if prompts.json not present, raise error
 if not os.path.exists(f"prompts.json"):
-    raise Exception("prompts.json not found. You must generate a prompt with `python3 generateprompt.py` before running the web app.")
+    raise Exception(
+        "prompts.json not found. You must generate a prompt with `python3 generateprompt.py` before running the web app."
+    )
 
 with open("prompts.json", "r") as f:
     prompts = json.load(f)
@@ -36,7 +39,7 @@ class Prompt:
     def raw_prompt(self):
         return prompt_list[self.prompt_id]["prompt"]
 
-    def execute(self, substitutions={}, prompt_text=""):
+    def execute(self, substitutions={}, prompt_text="", temperature=None):
         new_prompt = deepcopy(prompt_list[self.prompt_id])
 
         if prompt_text != "":
@@ -49,6 +52,13 @@ class Prompt:
                         f"[[[{key}]]]", substitutions[key]
                     )
 
+        if temperature is not None:
+            return openai.Completion.create(
+                model="gpt-3.5-turbo",
+                messages=new_prompt["prompt"],
+                temperature=temperature,
+            )["choices"][0]["message"]["content"]
+
         return openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=new_prompt["prompt"],
@@ -58,7 +68,7 @@ class Prompt:
         embedded_query = openai.Embedding.create(
             input=query, model="text-embedding-ada-002"
         )
-    
+
         D, I = vector_index.search(
             np.array([embedded_query["data"][0]["embedding"]]).reshape(1, 1536), 25
         )
@@ -68,7 +78,9 @@ class Prompt:
         for i in I[0]:
             knn.append(schema[i]["text"])
 
-        content_sources = [schema[i].get("url", None) for i in I[0] if schema[i].get("url")]
+        content_sources = [
+            schema[i].get("url", None) for i in I[0] if schema[i].get("url")
+        ]
 
         if len(content_sources) > 0:
             titles = [schema[i].get("title", schema[i]["url"]) for i in I[0]]
