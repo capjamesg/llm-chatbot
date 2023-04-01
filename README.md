@@ -227,6 +227,41 @@ The following keys are recommended, in addition to `text`:
 
 Whenever you want to update the index, run the `ingest.py` script. Then, restart the web application. This restart is necessary because the vector database is held in RAM in the web application.
 
+## Evaluations (Experimental)
+
+*Note that the below method is experimental. Because language models are non-deterministic, the results of evaluations may vary.*
+
+This project has a mechanism called Evaluations that you can use to (roughly) evaluate the performance of your bot. This mechanism is inspired by [openai/evals](https://github.com/openai/evals).
+
+To create an Evaluation, you must first have a prompt and reference index set up. Then, create a folder called `evals` and add a JSON file with the following structure:
+
+```
+[
+   {
+      "question": "...",
+      "answer": "..."
+   }
+]
+```
+
+You can create as many JSON documents in the `evals` folder as you want. You can use separate JSON documents for different types of evaluations.
+
+To run an evaluation, use the following command:
+
+```
+python3 eval.py --eval
+```
+
+When you run this command, the script will iterate through all the JSON documents in the `evals` folder. Each question is sent to the OpenAI API in the format of your prompt template as normal. Then, a new prompt is created that asks whether the answer can be substantiated by the sources provided. This new prompt is sent to the OpenAI API, where three responses are possible:
+
+- `CORRECT`: The answer is substantiated by the sources.
+- `INCORRECT`: The answer is not substantiated by the sources.
+- `UNSURE`: The bot is unsure.
+
+The results are printed to the console after all Evaluations have been executed.
+
+You can also review the results of the most recent evaluation by opening `http://localhost:5000/eval` in the web application. You need to be authenticated as an administrative user to access this page.
+
 ## Contributors
 
 - capjamesg
