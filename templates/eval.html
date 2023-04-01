@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+    {% include 'head.html' %}
+    <body>
+        {% include 'nav.html' %}
+        <main>
+            <h1>James Bot Evaluation 🤖</h1>
+            <h2>Results</h2>
+            <ul class="results">
+                <li>Successful Evaluations: {{ eval["stats"]["successful_evals_count"] }}</li>
+                <li>Failed Evaluations: {{ eval["stats"]["failed_evals_count"] }}</li>
+                <li>Unsure Evaluations: {{ eval["stats"]["unsure_evals_count"] }}</li>
+                <li>Precision: {{ eval["stats"]["precision"] }}</li>
+                <li>Recall: {{ eval["stats"]["recall"] }}</li>
+                <li>F1 Score: {{ eval["stats"]["f1_score"] | round(2) }}</li>
+            </ul>
+            <h3>Prompt and Data</h3>
+            <ul class="results">
+                <li>Eval UUID: {{ eval["eval_uuid"] }}</li>
+                <li>Prompt ID: {{ eval["prompt_id"] }}</li>
+                <li>Generated on: {{ eval["generated_on"] }}</li>
+                <li>Index ID: {{ eval["index_id"] }}</li>
+                <li>Index Name: {{ eval["index_name"] }}</li>
+            </ul>
+            {% if eval["stats"]["successful_evals_count"] > 0 %}
+                <h2>Successful Questions and Answers</h2>
+                <ul>
+                    {% for item in eval["stats"]["successful_evals"] %}
+                        <li>
+                            <h3>{{ item["question"] }}</h3>
+                            <pre>{{ item["response"] | safe }}</pre>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            {% if eval["stats"]["failed_evals_count"] > 0 %}
+                <h2>Failed Questions and Answers</h2>
+                <ul>
+                    {% for item in eval["stats"]["failed_evals"] %}
+                        <li>
+                            <h3>{{ item["question"] }}</h3>
+                            <pre>{{ item["response"] | safe }}</pre>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            {% if eval["stats"]["unsure_evals_count"] > 0 %}
+                <h2>Unsure Questions and Answers</h2>
+                <ul>
+                    {% for item in eval["stats"]["unsure_evals"] %}
+                        <li>
+                            <h3>{{ item["question"] }}</h3>
+                            <pre>{{ item["response"] | safe }}</pre>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            <style>
+                main li {
+                    margin-bottom: 2em;
+                    border-bottom: 1px solid #ccc;
+                }
+                .results li {
+                    border-bottom: none;
+                }
+            </style>
+            <footer>
+                <p>James Bot is made with ❤️, 🧇 and ☕️ by <a href="https://jamesg.blog">capjamesg</a>. </p>
+            </footer>
+        </main>
+    </body>
+</html>
