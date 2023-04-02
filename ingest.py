@@ -74,7 +74,7 @@ def get_embedding(vector_index, document: str, schema=[]):
     vector_index.add(np.array([embeddings]).reshape(1, 1536))
 
     schema.append(document)
-
+    time.sleep(1)
     return vector_index, schema
 
 
