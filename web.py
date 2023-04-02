@@ -348,7 +348,7 @@ def indieauth_callback():
     session["access_token"] = response.response.get("access_token")
     session["scope"] = response.response.get("scope")
 
-    return redirect("/bot")
+    return redirect("/adminpage")
 
 
 @app.route("/logout")
