@@ -121,7 +121,7 @@
                         share_button.addEventListener('click', function(e) {
                             e.preventDefault();
                             // copy to clipboard then make toast
-                            var url = 'https://jamesg.blog/bot/prompt/' + encodeURIComponent(text['id']);
+                            var url = window.location.origin + window.location.pathname + 'prompt/' + encodeURIComponent(text['id']);
                             // write to clipboard
                             navigator.clipboard.writeText(url).then(function() {
                                 // make toast
@@ -138,8 +138,8 @@
                         document.getElementById('concise-answer').setAttribute('data-id', text['id']);
 
                         var share_link = document.getElementById('share-link-below-question');
-                        share_link.href = 'https://jamesg.blog/prompt/' + encodeURIComponent(text['id']);
-                        share_link.innerText = 'https://jamesg.blog/prompt/' + encodeURIComponent(text['id']);
+                        share_link.href = window.location.origin + window.location.pathname + 'prompt/' + encodeURIComponent(text['id']);
+                        share_link.innerText = window.location.origin + window.location.pathname + 'prompt/' + encodeURIComponent(text['id']);
                         document.getElementById('concise-answer').after(share_button);
                         // save prompt id, question, and answer to localstorage
                         var prompt = {
