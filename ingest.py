@@ -281,6 +281,8 @@ def index_pending(vector_index, schema=[]):
             with open("pending_indexing/" + file, "r") as f:
                 data = json.load(f)
 
+            sys.stdout.write(f"Indexing {file}\n")
+            sys.stdout.flush()
             vector_index, schema = get_embedding(vector_index, data, schema)
 
             os.rename("pending_indexing/" + file, "indexed_docs/" + file)
