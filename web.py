@@ -337,6 +337,8 @@ def indieauth_callback():
             required_scopes=required_scopes,
         )
     except Exception as e:
+        sys.stdout.write(f"Error {e}\n")
+        sys.stdout.flush()
         flash("Sorry, there was an error. Please try again.")
         return redirect("/login")
 
