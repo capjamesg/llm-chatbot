@@ -12,7 +12,6 @@ import uuid
 import faiss
 import numpy as np
 import openai
-import psycopg2
 from flask import (Flask, flash, jsonify, redirect, render_template, request,
                    session)
 from indieweb_utils import (Paginator, discover_endpoints,
@@ -21,14 +20,25 @@ from indieweb_utils import (Paginator, discover_endpoints,
 import config
 from PromptManager import Prompt
 
+
 openai.api_key = config.OPENAI_KEY
 
-conn = psycopg2.connect(
-    host=config.DB_HOST,
-    database=config.DB_NAME,
-    user=config.DB_USER,
-    password=config.DB_PASS,
-)
+if config.DB_TYPE == "postgres":
+    import psycopg2
+    conn = psycopg2.connect(
+        host=config.DB_HOST,
+        database=config.DB_NAME,
+        user=config.DB_USER,
+        password=config.DB_PASS,
+    )
+if config.DB_TYPE == "mysql":
+    import mysql.connector
+    conn = mysql.connector.connect(
+        host=config.DB_HOST,
+        database=config.DB_NAME,
+        user=config.DB_USER,
+        password=config.DB_PASS,
+    )
 
 prompt_data = Prompt()
 
@@ -275,19 +285,20 @@ def query():
 
     citations = [{"url": c[0], "title": c[1]} for c in citations]
 
-    cursor = conn.cursor()
-
-    # save prompt response and original question
-    identifier = str(uuid.uuid4())
-
-    date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    cursor.execute(
-        "INSERT INTO answers VALUES (%s, %s, %s, %s, %s, %s, %s)",
-        (response, query, identifier, prompt_id, date, username, "0"),
-    )
-
-    conn.commit()
+    if config.DB_TYPE:
+        cursor = conn.cursor()
+    
+        # save prompt response and original question
+        identifier = str(uuid.uuid4())
+    
+        date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+        cursor.execute(
+            "INSERT INTO answers VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            (response, query, identifier, prompt_id, date, username, "0"),
+        )
+    
+        conn.commit()
 
     return jsonify(
         {

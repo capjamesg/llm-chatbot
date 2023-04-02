@@ -26,6 +26,7 @@ numpy==1.24.2
 openai==0.27.2
 Pillow==9.4.0
 psycopg2==2.9.5
+mysql-connector-python==8.0.32
 pycparser==2.21
 PyJWT==2.4.0
 requests==2.26.0
