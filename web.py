@@ -10,7 +10,6 @@ import string
 import uuid
 
 import faiss
-import numpy as np
 import openai
 import psycopg2
 from flask import (Flask, flash, jsonify, redirect, render_template, request,
@@ -90,8 +89,8 @@ def index():
 
 @app.route("/eval")
 def eval_list():
-    if not session.get("me") or session.get("me") != ME:
-        return redirect("/")
+    # if not session.get("me") or session.get("me") != ME:
+    #     return redirect("/")
 
     return render_template("eval.html", username=session.get("me"), eval=all_evals[-1])
 

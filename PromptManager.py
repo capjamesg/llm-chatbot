@@ -56,8 +56,9 @@ class Prompt:
             return openai.Completion.create(
                 model="gpt-3.5-turbo",
                 messages=new_prompt["prompt"],
-                temperature=temperature,
             )["choices"][0]["message"]["content"]
+
+        print(new_prompt["prompt"])
 
         return openai.ChatCompletion.create(
             model="gpt-3.5-turbo",

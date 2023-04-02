@@ -85,6 +85,10 @@ class Evaluation:
                 }
             )
 
+            print(response)
+
+            print("Evaluating response...\n\n\n")
+
             eval_response = prompt_data.execute(
                 {
                     "QUERY": response,
@@ -93,6 +97,8 @@ class Evaluation:
                 prompt_text=EVALUATE_PROMPT,
                 temperature=0.0,
             )
+
+            print(eval_response)
 
             eval_record = {
                 "response": eval_response,
@@ -129,7 +135,7 @@ class Evaluation:
         }
 
         return self.stats
-    
+
     def pretty_print_eval_stats(self):
         stats = self.stats
         print(f"Precision: {stats['precision']}")
@@ -210,7 +216,7 @@ if __name__ == "__main__":
     if parser.parse_args().create:
         while True:
             eval.create_eval_interactive("coffee")
-    
+
     if parser.parse_args().eval:
         eval.run_evals()
         eval.pretty_print_eval_stats()
