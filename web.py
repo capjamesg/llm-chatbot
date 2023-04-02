@@ -301,6 +301,8 @@ def query():
         )
     
         conn.commit()
+    else:
+        identifier = ""
 
     return jsonify(
         {
