@@ -368,7 +368,7 @@ def login():
 def discover_auth_endpoint():
     domain = request.form.get("domain")
 
-    if domain.strip("/").strip() != ME:
+    if domain.strip() != ME:
         flash("Sorry, this domain is not supported.")
         return redirect("/login")
 
@@ -391,17 +391,16 @@ def discover_auth_endpoint():
 
     session["server_url"] = headers.get("microsub")
 
-    random_code = "".join(
+    code_verifier = "".join(
         random.choice(string.ascii_uppercase + string.digits) for _ in range(30)
     )
 
-    session["code_verifier"] = random_code
+    session["code_verifier"] = code_verifier
     session["authorization_endpoint"] = authorization_endpoint
     session["token_endpoint"] = token_endpoint
 
-    sha256_code = hashlib.sha256(random_code.encode("utf-8")).hexdigest()
-
-    code_challenge = base64.b64encode(sha256_code.encode("utf-8")).decode("utf-8")
+    sha256_hash = hashlib.sha256(code_verifier.encode('utf-8')).digest()
+    code_challenge = base64.urlsafe_b64encode(sha256_hash).rstrip(b'=').decode('utf-8')
 
     state = "".join(
         random.choice(string.ascii_uppercase + string.digits) for _ in range(10)
