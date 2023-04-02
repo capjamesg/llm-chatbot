@@ -8,6 +8,7 @@ import random
 import re
 import string
 import uuid
+import sys
 
 import faiss
 import openai
@@ -107,14 +108,14 @@ def eval_list():
 
 @app.route("/prompt/<prompt_id>")
 def prompt(prompt_id):
-    with conn.cursor() as cur:
+    with conn.cursor(dictionary=True) as cur:
         cur.execute("SELECT * FROM answers WHERE id = %s", (prompt_id,))
         prompt = cur.fetchone()
 
         if not prompt:
             return render_template("404.html"), 404
 
-        return render_template("prompt.html", prompt=prompt, slug="prompt/" + prompt[2])
+        return render_template("prompt.html", prompt=prompt, slug="prompt/" + prompt['id'])
 
 
 @app.route("/session", methods=["GET"])
@@ -142,7 +143,7 @@ def admin():
     if not session.get("me") or session.get("me") != ME:
         return redirect("/")
 
-    with conn.cursor() as cur:
+    with conn.cursor(dictionary=True) as cur:
         cur.execute("SELECT * FROM answers ORDER BY date DESC")
         all_posts = cur.fetchall()
 
@@ -151,14 +152,15 @@ def admin():
 
     paginator = Paginator(all_posts, 10)
 
-    page = request.args.get("page", 1)
+    page = request.args.get("page", 0)
 
     try:
         page = int(page)
     except ValueError:
-        page = 1
+        page = 0
 
     num_pages = paginator.total_pages
+
     if num_pages > 0:
         all_posts = paginator.get_page(page)
     else:
@@ -185,14 +187,14 @@ def defend():
     id = request.form["id"]
 
     # remove all punctuation aside from question marks, commas, and full stops
-    with conn.cursor() as cur:
+    with conn.cursor(dictionary=True) as cur:
         cur.execute("SELECT * FROM answers WHERE id = %s", (id,))
         prompt = cur.fetchone()
 
-    query = prompt[0]
+    query = prompt['prompt']
 
     # get Sources from prompt
-    prompt_text = prompt[0]
+    prompt_text = prompt['prompt']
 
     sources = prompt_text.split("Sources")[-1].split("[STOP]")[0]
 
@@ -296,7 +298,7 @@ def query():
         date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
         cursor.execute(
-            "INSERT INTO answers VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            "INSERT INTO answers (prompt, question, id, prompt_id, date, username, status) VALUES (%s, %s, %s, %s, %s, %s, %s)",
             (response, query, identifier, prompt_id, date, username, "0"),
         )
     
