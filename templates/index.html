@@ -232,7 +232,7 @@
             document.getElementById('thumbs-down').addEventListener('click', function(e) {
                 e.preventDefault();
                 var id = document.getElementById('concise-answer').getAttribute('data-id');
-                giveFeedback(id, 0);
+                giveFeedback(id, -1);
                 // hide feedback
                 var feedback = document.querySelector('.feedback');
                 feedback.style.display = 'none';

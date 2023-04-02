@@ -429,8 +429,8 @@ def feedback():
     feedback = request.form["feedback"]
     id = request.form["id"]
 
-    # if id not 1 or 2, return error
-    if id not in ["1", "2"]:
+    # if feedback not 1 or -1, return error
+    if id not in ["1", "-1"]:
         return jsonify({"success": False})
 
     cursor = conn.cursor()

@@ -6,7 +6,8 @@ CREATE TABLE public.answers (
     prompt_id text,
     date text,
     username text,
-    status text
+    status text,
+    feedback integer
 );
 
 ALTER TABLE ONLY public.answers
