@@ -89,8 +89,8 @@ def index():
 
 @app.route("/eval")
 def eval_list():
-    # if not session.get("me") or session.get("me") != ME:
-    #     return redirect("/")
+    if not session.get("me") or session.get("me") != ME:
+        return redirect("/")
 
     return render_template("eval.html", username=session.get("me"), eval=all_evals[-1])
 
