@@ -159,8 +159,11 @@ def admin():
     except ValueError:
         page = 1
 
-    all_posts = paginator.get_page(page)
     num_pages = paginator.total_pages
+    if num_pages > 0:
+        all_posts = paginator.get_page(page)
+    else:
+        all_posts = []
 
     return render_template(
         "admin.html",
