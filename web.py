@@ -120,7 +120,7 @@ def prompt(prompt_id):
 
 @app.route("/session", methods=["GET"])
 def user_session():
-    return render_template("session.html")
+    return render_template("session.html", me=session.get("me"))
 
 
 @app.route("/index", methods=["POST"])

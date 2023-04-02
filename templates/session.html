@@ -5,6 +5,11 @@
         {% include 'nav.html' %}
         <main>
             <h1>James Bot: Prompt Session 🤖</h1>
+            
+            {% if me %}
+              Logged in as <code>{{ me }}</code>
+            {% endif %}
+            
             <h2>Your Prompts</h2>
             <button id="clear-session">Clear Session</button>
             <ul id="prompts"></ul>
