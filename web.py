@@ -10,7 +10,6 @@ import string
 import uuid
 
 import faiss
-import numpy as np
 import openai
 from flask import (Flask, flash, jsonify, redirect, render_template, request,
                    session)
