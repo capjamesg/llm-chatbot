@@ -8,7 +8,9 @@ import numpy as np
 import openai
 import requests
 
-openai.api_key = os.environ["OPENAI_KEY"]
+import config
+
+openai.api_key = config.OPENAI_KEY
 
 # create indices/ if it doesn't exist
 if not os.path.exists("indices"):
