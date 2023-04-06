@@ -8,7 +8,9 @@ import numpy as np
 import openai
 import requests
 
-openai.api_key = os.environ["OPENAI_KEY"]
+import config
+
+openai.api_key = config.OPENAI_KEY
 
 
 def initialize_loading():
@@ -16,35 +18,40 @@ def initialize_loading():
     if not os.path.exists("indices"):
         os.makedirs("indices")
 
+    first_start = False
+
     # create indices/current.json if it doesn't exist
     if not os.path.exists("indices/current.json"):
+        first_start = True
         with open("indices/current.json", "w") as f:
-            json.dump({"index": 0}, f)
+            json.dump({"index": 1}, f)
 
     with open("indices/current.json", "r") as f:
-        current_index = json.load(f)["index"] + 1
+        current_index = json.load(f)["index"]
 
-    with open("indices/current.json", "w") as f:
-        json.dump({"index": current_index}, f)
+    if first_start or "--new" in sys.argv:
+        if not first_start:
+            current_index = current_index + 1
+        
+        with open("indices/current.json", "w") as f:
+            json.dump({"index": current_index}, f)
 
     # mkdir if it doesn't exist
     if not os.path.exists("indices/" + str(current_index)):
         os.makedirs("indices/" + str(current_index))
 
     # read all files in logs
-    # if "--new" is an argument, use fresh index
+    # if first start or "--new" is an argument, use fresh index
 
-    if current_index == 1 or "--new" in sys.argv:
+    if first_start or "--new" in sys.argv:
         vector_index = faiss.IndexFlatL2(1536)
         schema = []
     else:
         # open most recent index, which should have the name "main.bin"
-        with open(
-            "indices/" + str(current_index - 1) + "/main_vector_index.bin", "rb"
-        ) as f:
-            vector_index = faiss.read_index(f)
+        print("Opening index "+str(current_index))
+        vector_index = faiss.read_index("indices/" + str(current_index) + "/main_vector_index.bin")
 
-        with open("indices/" + str(current_index - 1) + "/main_schema.json", "r") as f:
+        with open("indices/" + str(current_index) + "/main_schema.json", "r") as f:
             schema = json.load(f)
 
     return vector_index, schema, current_index
@@ -92,7 +99,7 @@ def get_embedding(vector_index, document: str, schema: list = []):
     vector_index.add(np.array([embeddings]).reshape(1, 1536))
 
     schema.append(document)
-
+    time.sleep(1)
     return vector_index, schema
 
 
@@ -101,7 +108,7 @@ def index_pending(
     current_index: int,
     schema: list = [],
     chunking_mechanism: str = "words",
-    word_count: int = 0,
+    word_count: int = 750,
 ) -> tuple:
     """
     Index all pending documents in pending_indexing/*.json.
@@ -127,6 +134,9 @@ def index_pending(
             with open("pending_indexing/" + file, "r") as f:
                 data = json.load(f)
 
+            sys.stdout.write(f"Indexing {file}\n")
+            sys.stdout.flush()
+
             document_text = data["text"].split(" ")
 
             # divide document into 750 word chunks, max
@@ -150,12 +160,13 @@ def index_pending(
             for chunk in chunks:
                 fully_assembled_docs.append({"text": chunk, **other_metadata})
 
+            print("  Indexing in "+str(len(chunks))+" chunks")
+
             for data in fully_assembled_docs:
                 vector_index, schema = get_embedding(vector_index, data, schema)
-
-                os.rename("pending_indexing/" + file, "indexed_docs/" + file)
-
                 save_index_and_schema(vector_index, schema, current_index, stage="main")
+
+            os.rename("pending_indexing/" + file, "indexed_docs/" + file)
 
     return vector_index, schema
 

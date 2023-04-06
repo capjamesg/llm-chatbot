@@ -6,13 +6,13 @@
         <main class="h-entry">
             <h1>James Bot 🤖</h1>
             <p>Showing a saved answer.</p>
-            <textarea name="text" placeholder="Ask a question..." rows="3" disabled class="p-name">{{ prompt[1] }}</textarea>
-            <pre><span id="concise-answer" class="e-content">{{ prompt[0] | safe }}</span></pre>
-            {% if prompt[4] %}
-                <p>Generated on {{ prompt[4] }}.</p>
+            <textarea name="text" placeholder="Ask a question..." rows="3" disabled class="p-name">{{ prompt['question'] }}</textarea>
+            <pre><span id="concise-answer" class="e-content">{{ prompt['prompt'] | safe }}</span></pre>
+            {% if prompt['date'] %}
+                <p>Generated on {{ prompt['date'] }}.</p>
             {% endif %}
             <p class="disclaimer">This text was written by a generative text language model that references James' writing. Factual inaccuracies may be present. Sources, where provided, should be validated by a human.</p>
-            <a href="/?prompt={{ prompt[1].replace('?', '') }}"><button style="background-color: lightblue;">Remix</button></a>
+            <a href="/?prompt={{ prompt['question'].replace('?', '') }}"><button style="background-color: lightblue;">Remix</button></a>
             <a href="/"><button>Try It Yourself</button></a>
             <h2>About This Project</h2>
             <p>James Bot is an AI chatbot trained on James' writing. You can ask the Bot questions below.</p>

@@ -8,10 +8,10 @@ import random
 import re
 import string
 import uuid
+import sys
 
 import faiss
 import openai
-import psycopg2
 from flask import (Flask, flash, jsonify, redirect, render_template, request,
                    session)
 from indieweb_utils import (Paginator, discover_endpoints,
@@ -20,14 +20,25 @@ from indieweb_utils import (Paginator, discover_endpoints,
 import config
 from PromptManager import Prompt
 
+
 openai.api_key = config.OPENAI_KEY
 
-conn = psycopg2.connect(
-    host=config.DB_HOST,
-    database=config.DB_NAME,
-    user=config.DB_USER,
-    password=config.DB_PASS,
-)
+if config.DB_TYPE == "postgres":
+    import psycopg2
+    conn = psycopg2.connect(
+        host=config.DB_HOST,
+        database=config.DB_NAME,
+        user=config.DB_USER,
+        password=config.DB_PASS,
+    )
+if config.DB_TYPE == "mysql":
+    import mysql.connector
+    conn = mysql.connector.connect(
+        host=config.DB_HOST,
+        database=config.DB_NAME,
+        user=config.DB_USER,
+        password=config.DB_PASS,
+    )
 
 prompt_data = Prompt()
 
@@ -97,19 +108,19 @@ def eval_list():
 
 @app.route("/prompt/<prompt_id>")
 def prompt(prompt_id):
-    with conn.cursor() as cur:
+    with conn.cursor(dictionary=True) as cur:
         cur.execute("SELECT * FROM answers WHERE id = %s", (prompt_id,))
         prompt = cur.fetchone()
 
         if not prompt:
             return render_template("404.html"), 404
 
-        return render_template("prompt.html", prompt=prompt, slug="prompt/" + prompt[2])
+        return render_template("prompt.html", prompt=prompt, slug="prompt/" + prompt['id'])
 
 
 @app.route("/session", methods=["GET"])
 def user_session():
-    return render_template("session.html")
+    return render_template("session.html", me=session.get("me"))
 
 
 @app.route("/index", methods=["POST"])
@@ -132,7 +143,7 @@ def admin():
     if not session.get("me") or session.get("me") != ME:
         return redirect("/")
 
-    with conn.cursor() as cur:
+    with conn.cursor(dictionary=True) as cur:
         cur.execute("SELECT * FROM answers ORDER BY date DESC")
         all_posts = cur.fetchall()
 
@@ -141,15 +152,19 @@ def admin():
 
     paginator = Paginator(all_posts, 10)
 
-    page = request.args.get("page", 1)
+    page = request.args.get("page", 0)
 
     try:
         page = int(page)
     except ValueError:
-        page = 1
+        page = 0
 
-    all_posts = paginator.get_page(page)
     num_pages = paginator.total_pages
+
+    if num_pages > 0:
+        all_posts = paginator.get_page(page)
+    else:
+        all_posts = []
 
     return render_template(
         "admin.html",
@@ -172,14 +187,14 @@ def defend():
     id = request.form["id"]
 
     # remove all punctuation aside from question marks, commas, and full stops
-    with conn.cursor() as cur:
+    with conn.cursor(dictionary=True) as cur:
         cur.execute("SELECT * FROM answers WHERE id = %s", (id,))
         prompt = cur.fetchone()
 
-    query = prompt[0]
+    query = prompt['prompt']
 
     # get Sources from prompt
-    prompt_text = prompt[0]
+    prompt_text = prompt['prompt']
 
     sources = prompt_text.split("Sources")[-1].split("[STOP]")[0]
 
@@ -274,19 +289,22 @@ def query():
 
     citations = [{"url": c[0], "title": c[1]} for c in citations]
 
-    cursor = conn.cursor()
-
-    # save prompt response and original question
-    identifier = str(uuid.uuid4())
-
-    date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-    cursor.execute(
-        "INSERT INTO answers VALUES (%s, %s, %s, %s, %s, %s, %s)",
-        (response, query, identifier, prompt_id, date, username, "0"),
-    )
-
-    conn.commit()
+    if config.DB_TYPE:
+        cursor = conn.cursor()
+    
+        # save prompt response and original question
+        identifier = str(uuid.uuid4())
+    
+        date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
+        cursor.execute(
+            "INSERT INTO answers (prompt, question, id, prompt_id, date, username, status) VALUES (%s, %s, %s, %s, %s, %s, %s)",
+            (response, query, identifier, prompt_id, date, username, "0"),
+        )
+    
+        conn.commit()
+    else:
+        identifier = ""
 
     return jsonify(
         {
@@ -322,6 +340,8 @@ def indieauth_callback():
             required_scopes=required_scopes,
         )
     except Exception as e:
+        sys.stdout.write(f"Error {e}\n")
+        sys.stdout.flush()
         flash("Sorry, there was an error. Please try again.")
         return redirect("/login")
 
@@ -331,7 +351,7 @@ def indieauth_callback():
     session["access_token"] = response.response.get("access_token")
     session["scope"] = response.response.get("scope")
 
-    return redirect("/bot")
+    return redirect("/adminpage")
 
 
 @app.route("/logout")
@@ -351,7 +371,7 @@ def login():
 def discover_auth_endpoint():
     domain = request.form.get("domain")
 
-    if domain.strip("/").strip() != ME:
+    if domain.strip() != ME:
         flash("Sorry, this domain is not supported.")
         return redirect("/login")
 
@@ -374,17 +394,16 @@ def discover_auth_endpoint():
 
     session["server_url"] = headers.get("microsub")
 
-    random_code = "".join(
+    code_verifier = "".join(
         random.choice(string.ascii_uppercase + string.digits) for _ in range(30)
     )
 
-    session["code_verifier"] = random_code
+    session["code_verifier"] = code_verifier
     session["authorization_endpoint"] = authorization_endpoint
     session["token_endpoint"] = token_endpoint
 
-    sha256_code = hashlib.sha256(random_code.encode("utf-8")).hexdigest()
-
-    code_challenge = base64.b64encode(sha256_code.encode("utf-8")).decode("utf-8")
+    sha256_hash = hashlib.sha256(code_verifier.encode('utf-8')).digest()
+    code_challenge = base64.urlsafe_b64encode(sha256_hash).rstrip(b'=').decode('utf-8')
 
     state = "".join(
         random.choice(string.ascii_uppercase + string.digits) for _ in range(10)
@@ -410,8 +429,8 @@ def feedback():
     feedback = request.form["feedback"]
     id = request.form["id"]
 
-    # if id not 1 or 2, return error
-    if id not in ["1", "2"]:
+    # if feedback not 1 or -1, return error
+    if id not in ["1", "-1"]:
         return jsonify({"success": False})
 
     cursor = conn.cursor()

@@ -21,18 +21,18 @@
             <h2>Prompts</h2>
             <ul>
                 {% for prompt in prompts %}
-                    <li {% if prompt[5] == 0 %}style="opacity: 0.5;"{% endif %}>
-                        {% if prompt[5] == 0 %}<p style="font-size: 0.8em;">Downvoted</p>{% endif %}
-                        <h3>{{ prompt[1] }}</h3>
-                        <pre>{{ prompt[0] | safe }}</pre>
-                        {% if prompt[4] %}
-                            <p>Generated on {{ prompt[4] }}</p>
+                    <li {% if prompt['status'] == 0 %}style="opacity: 0.5;"{% endif %}>
+                        {% if prompt['status'] == 0 %}<p style="font-size: 0.8em;">Downvoted</p>{% endif %}
+                        <h3>{{ prompt['question'] }}</h3>
+                        <pre>{{ prompt['prompt'] | safe }}</pre>
+                        {% if prompt['date'] %}
+                            <p>Generated on {{ prompt['date'] }}</p>
                         {% endif %}
-                        <p style="font-size: 0.8em;">(prompt ID {{ prompt[3] }})</p>
-                        {% if prompt[5] %}
-                            <p>Question asked by <a href="{{ prompt[5] }}">{{ prompt[5].replace("https://", "").replace("http://", "").strip("/") }}</a>.</p>
+                        <p style="font-size: 0.8em;">(prompt ID {{ prompt['prompt_id'] }})</p>
+                        {% if prompt['username'] %}
+                            <p>Question asked by <a href="{{ prompt['username'] }}">{{ prompt[5].replace("https://", "").replace("http://", "").strip("/") }}</a>.</p>
                         {% endif %}
-                        <p><a href="/prompt/{{ prompt[2] }}">View Prompt</a></p>
+                        <p><a href="/prompt/{{ prompt['id'] }}">View Prompt</a></p>
                     </li>
                 {% endfor %}
             </ul>
