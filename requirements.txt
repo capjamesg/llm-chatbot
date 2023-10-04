@@ -24,7 +24,7 @@ mf2py==1.1.2
 multidict==6.0.4
 numpy==1.24.2
 openai==0.27.2
-Pillow==9.4.0
+Pillow==10.0.1
 psycopg2==2.9.5
 mysql-connector-python==8.0.32
 pycparser==2.21
